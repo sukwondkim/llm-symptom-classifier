@@ -1,13 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from models.inference import InferenceModel
+from api.inference_instance import inference_model
 from api.endpoints import router as api_router
-
-inference_model = InferenceModel()
+from schemas.schemas import StatusResponse
 
 @asynccontextmanager
-def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):
     print("[Startup] Connecting to Redis...")
     inference_model.setup_redis()
 
@@ -20,4 +19,9 @@ def lifespan(app: FastAPI):
     inference_model.close_redis()
 
 app = FastAPI(title="LLM Symptom Classifier API", version="1.0", lifespan=lifespan)
+
+@app.get("/health", response_model=StatusResponse)
+def health_check():
+    return StatusResponse(status="Healthy")
+
 app.include_router(api_router, prefix="/v1")

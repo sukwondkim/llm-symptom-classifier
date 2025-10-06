@@ -1,42 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from main import inference_model
-from schemas import InputData, PredictionResponse, StatusResponse
-from utils.preprocessing import preprocess_input
+from api.inference_instance import inference_model
+from schemas.schemas import PredictionResponse, StatusResponse
+from utils.preprocessing import preprocess_input, preprocess_input_put
 
 router = APIRouter()
 
 @router.post("/post", response_model=PredictionResponse)
-async def predict(data: dict = Depends(preprocess_input)):
-    cached: str = await inference_model.query_cache(data["hpo_ids"])
+def predict(data: dict = Depends(preprocess_input)):
+    cached: str = inference_model.query_cache(data["hpo_ids"])
     if cached:
         return PredictionResponse(prediction=[cached], cached=True)
     
     try:
-        predicted: list = inference_model.predict(data["hpo_ids"])
-    except Exception:
-        raise HTTPException(status_code=500, detail="Internal model error")
+        predicted: str = inference_model.predict(data["hpo_ids"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal model error: {e}")
     
     return PredictionResponse(prediction=predicted, model_version=inference_model.model_version)
 
 
 @router.get("/get", response_model=PredictionResponse)
-async def get_data(data: dict = Depends(preprocess_input)):
-    cached: str = await inference_model.query_cache(data["hpo_ids"])
+def get_data(data: dict = Depends(preprocess_input)):
+    cached: str = inference_model.query_cache(data["hpo_ids"])
     if not cached:
         raise HTTPException(status_code=404, detail="Record not found")
     
-    return PredictionResponse(prediction=[cached], cached=True)
+    return PredictionResponse(prediction=cached, cached=True)
 
 
 @router.put("/put", response_model=StatusResponse)
-async def set_data(data: dict = Depends(preprocess_input)):
+def set_data(data: dict = Depends(preprocess_input_put)):
     try:
-        status = await inference_model.set_cache(data["hpo_ids"], data["category"])
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except RuntimeError as re:
-        raise HTTPException(status_code=500, detail=str(re))
+        status = inference_model.set_cache(data["hpo_ids"], data["category"])
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
@@ -44,11 +40,11 @@ async def set_data(data: dict = Depends(preprocess_input)):
 
 
 @router.delete("/delete", response_model=StatusResponse)
-async def delete_data(data: dict = Depends(preprocess_input)):
+def delete_data(data: dict = Depends(preprocess_input)):
     try:
-        status = await inference_model.delete_cache(data["hpo_ids"])
+        status = inference_model.delete_cache(data["hpo_ids"])
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail="Record not found")
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
     
