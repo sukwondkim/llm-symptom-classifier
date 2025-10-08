@@ -21,8 +21,8 @@ from models.hpo_dataset import HPODataset
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_file", type=str, default="outputs")
-    parser.add_argument("--output_dir", type=str, default=outputs)
+    parser.add_argument("--train_file", type=str, default="data/mock_train.tsv")
+    parser.add_argument("--output_dir", type=str, default="outputs")
     parser.add_argument("--max_token_len", type=int, default=256)
     parser.add_argument("--per_device_train_batch_size", type=int, default=8)
     parser.add_argument("--per_device_eval_batch_size", type=int, default=8)
@@ -55,11 +55,11 @@ def main():
         num_labels=len(categories)
     )
     peft_config = LoraConfig(
-        "r": args.lora_r,
-        "lora_alpha": args.lora_alpha,
-        "lora_dropout": args.lora_dropout,
-        "target_modules": args.lora_target_modules.split(","),
-        "task_type": args.lora_task_type,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
+        lora_dropout=args.lora_dropout,
+        target_modules=args.lora_target_modules.split(","),
+        task_type=args.lora_task_type,
     )
     model = get_peft_model(base_model, peft_config)
     model.print_trainable_parameters()
@@ -146,3 +146,5 @@ def main():
     trainer.model.save_model(args.output_dir)
     trainer.tokenizer.save_tokenizer(args.output_dir)
     print(f"Trained model saved on {args.output_dir}")
+
+main()

@@ -172,7 +172,7 @@ The LLM Symptom Classifier API provides endpoints to predict, retrieve, store, a
 
 ## 4. Model: Fine-tuning & Evaluation
 ### Data
-A synthetic data `data/train.tsv` mimics the structure of real-world clinical data (HPO terms mapped to symptom categories).
+A synthetic data `data/mock_train.tsv` mimics the structure of real-world clinical data (HPO terms mapped to symptom categories).
 
 ### Methodology
 To enable the model to understand the contextual relationships between co-occurring HPO terms:

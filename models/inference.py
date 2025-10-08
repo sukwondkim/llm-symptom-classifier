@@ -25,7 +25,7 @@ class InferenceModel:
         self.redis_client.bgsave()
         self.redis_client.close()
 
-    def load_model(self, finetuned_model_path: str = "models/best_model.pth"):
+    def load_model(self, finetuned_model_path: str = "outputs"):
         self.tokenizer = AutoTokenizer.from_pretrained(base_model)
         if not self.tokenizer.pad_token:
             self.tokenizer.pad_token = self.tokenizer.eos_token

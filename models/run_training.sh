@@ -4,8 +4,9 @@
 # ======================================================
 
 # Set devices and train file
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-TRAIN_FILE=data/train.tsv
+export PYTHONPATH=$(pwd)
+
+TRAIN_FILE=data/mock_train.tsv
 
 # Output directory
 OUTPUT_DIR=outputs
@@ -26,14 +27,14 @@ LORA_TARGET_MODULES="q_proj,k_proj,v_proj,o_proj"
 LORA_DROPOUT=0.1
 
 # Run train.py
-python3 models/train.py \
+mkdir -p $OUTPUT_DIR
+python -m models.train \
     --train_file $TRAIN_FILE \
     --output_dir $OUTPUT_DIR \
     --max_token_len $MAX_TOKEN_LEN \
     --per_device_train_batch_size $BATCH_SIZE \
     --per_device_eval_batch_size $EVAL_BATCH_SIZE \
     --num_train_epochs $EPOCHS \
-    --deepspeed $DS_CONFIG \
     --base_model microsoft/biogpt \
     --lora_r $LORA_R \
     --lora_alpha $LORA_ALPHA \
