@@ -3,6 +3,7 @@ from typing import List, Optional
 import torch
 from redis import Redis
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from peft import PeftModel
 
 from utils.preprocessing import make_query, categories
 
@@ -26,7 +27,7 @@ class InferenceModel:
         self.redis_client.close()
 
     def load_model(self, finetuned_model_path: str = "outputs"):
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.base_model)
         if not self.tokenizer.pad_token:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 

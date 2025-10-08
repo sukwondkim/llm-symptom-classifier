@@ -1,5 +1,6 @@
 import argparse
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -67,7 +68,8 @@ def main():
 
     # Load data
     category_name2idx = {val: idx for idx, val in enumerate(categories)}
-    df = pd.read_csv(args.train_file, sep="\t", header=None, names=["hpo_ids", "category"])
+    df = pd.read_csv(args.train_file, sep="\t")
+
     def preprocess_hpo_ids(hpo_ids_str):
         hpo_ids = [h.strip() for h in hpo_ids_str.split(",") if h.strip() in hpo_data]
         if not hpo_ids:
@@ -99,14 +101,12 @@ def main():
 
     # Set up methods for training
     def compute_accuracy(p: EvalPrediction):
-        return {
-            "accuracy": accuracy_score(
-                p.label_ids, p.predictions.argmax(axis=-1)
-            )
-        }
+        labels = p.label_ids.flatten()
+        preds = p.predictions.argmax(axis=-1).flatten()
+        return {"accuracy": accuracy_score(labels, preds)}
 
     def use_only_logit(logits, _labels):
-        return logits[0]
+        return logits[0] if isinstance(logits, tuple) else logits
 
     train_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -119,6 +119,7 @@ def main():
         logging_strategy="epoch",
         eval_strategy="epoch",
         save_strategy="epoch",
+        label_names=["labels"],
         metric_for_best_model="accuracy",
         greater_is_better=True,
         load_best_model_at_end=True,
@@ -142,9 +143,8 @@ def main():
         trainer.train()
     print("Training complete!")
     
-    trainer.model.save_state()
-    trainer.model.save_model(args.output_dir)
-    trainer.tokenizer.save_tokenizer(args.output_dir)
+    trainer.model.save_pretrained(args.output_dir)
+    trainer.tokenizer.save_pretrained(args.output_dir)
     print(f"Trained model saved on {args.output_dir}")
 
 main()
